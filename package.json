@@ -1,12 +1,12 @@
 {
-  "name": "mapmaps",
-  "version": "1.0.0",
+  "name": "constellapedia",
+  "version": "0.0.1",
   "description": "",
   "scripts": {
     "build": "parcel build ./src/*.html --dist-dir ./public --public-url '/'",
     "dev": "rm -rf public & parcel watch ./src/*.html --dist-dir ./public --public-url '/'"
   },
-  "author": "",
+  "author": "Domingo Lupo",
   "license": "ISC",
   "dependencies": {
     "@editorjs/delimiter": "1.2.0",
@@ -26,9 +26,7 @@
     "ejs": "^3.1.6",
     "express": "^4.17.3",
     "glob": "^7.2.0",
-    "gwapiv2-node-client": "git+https://github.com/Growish/gw-api-v2-node-client.git",
     "moment": "^2.29.1",
-    "neo4j-driver": "^4.4.3",
     "noty": "^3.2.0-beta-deprecated",
     "sweetalert2": "^11.4.4"
   },
