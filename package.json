@@ -4,7 +4,8 @@
   "description": "",
   "scripts": {
     "build": "parcel build ./src/*.html --dist-dir ./public --public-url '/'",
-    "dev": "rm -rf public & parcel watch ./src/*.html --dist-dir ./public --public-url '/'"
+    "dev": "rm -rf public & parcel watch ./src/*.html --dist-dir ./public --public-url '/'",
+    "server": "node server.js"
   },
   "author": "Domingo Lupo",
   "license": "ISC",
@@ -20,12 +21,9 @@
     "@sweetalert2/theme-dark": "^5.0.10",
     "animate.css": "^4.1.1",
     "axios": "^0.26.0",
-    "body-parser": "^1.19.2",
-    "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "ejs": "^3.1.6",
     "express": "^4.17.3",
-    "glob": "^7.2.0",
     "moment": "^2.29.1",
     "noty": "^3.2.0-beta-deprecated",
     "sweetalert2": "^11.4.4"

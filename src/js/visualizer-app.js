@@ -190,17 +190,15 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
     $scope.toggleEdgesLabel = () => $scope.formData.options.edges.font.size = $scope.formData.edgesLabel ? 15 : 0;
 
-    console.log("111");
 
     async function draw() {
-
-        console.log("222");
 
         blockingLoader.show();
 
         $scope.drawPanelIsOpen = false;
 
-        const response = jsonURLConnector('/json-test/foo.json');
+        const response = await jsonURLConnector('/json-test/foo.json');
+
 
         const nodes = new vis.DataSet(response.nodes);
         const edges = new vis.DataSet(response.edges);
@@ -222,9 +220,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         $scope.formData.edgesLabel = !!$scope.formData.options.edges.font.size;
 
-        console.log("-->");
-        console.log(">>>", container, data, $scope.formData.options);
-
         constellation = new vis.Network(container, data, $scope.formData.options);
 
         constellation.on("stabilizationProgress", function (params) {
@@ -236,6 +231,7 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         });
 
         constellation.once("afterDrawing", function () {
+
             blockingLoader.hide();
 
             const isSmall = window.matchMedia ?
@@ -246,13 +242,12 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         });
 
 
-
-        constellation.on("doubleClick", function (event) {
+/*        constellation.on("doubleClick", function (event) {
             if(!event.nodes[0])
                 $timeout(() => $scope.openNodeOptionsPanel(), 0);
             else
                 $timeout(() => $scope.openNodeOptionsPanel(event.nodes[0]), 0);
-        });
+        });*/
 
     }
 
