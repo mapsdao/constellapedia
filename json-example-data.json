@@ -2,20 +2,40 @@
   "nodes": [
     {
       "id": 0,
-      "label": "Foo",
+      "label": "Goal: Stop climate change",
       "color": "#ddd"
     },
     {
       "id": 1,
-      "label": "Bar",
+      "label": "Project: 350.org",
+      "color": "green"
+    },
+    {
+      "id": 2,
+      "label": "Project: Biomimicry Institute, International",
+      "color": "green"
+    },
+    {
+      "id": 3,
+      "label": "Team: Climate Action Network (CAN), International",
       "color": "green"
     }
   ],
   "edges": [
     {
-      "from": 0,
-      "to": 1,
-      "label": "Edge example"
+      "from": 1,
+      "to": 0,
+      "label": "Working to solve"
+    },
+    {
+      "from": 2,
+      "to": 0,
+      "label": "Working to solve"
+    },
+    {
+      "from": 3,
+      "to": 0,
+      "label": "Working to solve"
     }
   ]
 }

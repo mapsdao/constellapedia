@@ -1,5 +1,7 @@
 # Constellapedia Web3 conversion
 
+![example](https://gcdnb.pbrd.co/images/l90YfCp7GtSQ.png?o=1)
+
 ## What is this?
 A simplified version of [Constellapedia](https://github.com/domingosl/mapmaps), all references to web2 API, 
 db connections and dependencies for non web3 relevant libraries have been removed for easy of use during the conversion
