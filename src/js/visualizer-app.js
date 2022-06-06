@@ -197,6 +197,7 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         $scope.drawPanelIsOpen = false;
 
+        //relevant001
         const response = await jsonURLConnector('/json-test/foo.json');
 
 
