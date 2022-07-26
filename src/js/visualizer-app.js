@@ -243,12 +243,12 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         });
 
 
-/*        constellation.on("doubleClick", function (event) {
+        constellation.on("doubleClick", function (event) {
             if(!event.nodes[0])
                 $timeout(() => $scope.openNodeOptionsPanel(), 0);
             else
                 $timeout(() => $scope.openNodeOptionsPanel(event.nodes[0]), 0);
-        });*/
+        });
 
     }
 
