@@ -107,32 +107,57 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         blockingLoader.show();
 
         // Test create node with OceanJS
-        const nodeFactory = new NodeFactory()
-        await nodeFactory.init()
+        const nodeFactory = new NodeFactory();
+        await nodeFactory.init();
+
+        console.log($scope.formData.nodeId);
+        console.log($scope.formData.nodeType);
+        console.log($scope.formData.nodeTitle);
+        console.log($scope.formData.nodeEdges);
+
 
         try {
-            if ($scope.formData.nodeId)
-                await axios.put(process.env.API_BASEURL + '/nodes/' + $scope.formData.nodeId, {
+            if ($scope.formData.nodeId) {
+              // update node
+              alert('update node');
+                /* await axios.put(process.env.API_BASEURL + '/nodes/' + $scope.formData.nodeId, {
                     name: $scope.formData.nodeTitle,
                     content: JSON.stringify(await nodeEditor.save()),
                     edges: $scope.formData.nodeEdges,
                     constellation: window.constellation
-                });
-            else
-                await axios.post(process.env.API_BASEURL + '/nodes/', {
+                }); */
+            } else {
+              // create node
+              if ($scope.formData.nodeType === '0') {
+                const newGoal = await nodeFactory.newGoal(
+                  $scope.formData.nodeTitle
+                )
+                console.log(`newGoal: ${newGoal}`);
+              } else if ($scope.formData.nodeType === '1') {
+                const newProject = await nodeFactory.newProject(
+                  $scope.formData.nodeTitle
+                )
+                console.log(`newProject: ${newProject}`);
+              } else {
+                throw new Error('Unknown node type');
+              }
+            }
+             
+                /* await axios.post(process.env.API_BASEURL + '/nodes/', {
                     name: $scope.formData.nodeTitle,
                     content: JSON.stringify(await nodeEditor.save()),
                     edges: $scope.formData.nodeEdges,
                     constellation: window.constellation,
                     type: $scope.formData.nodeType
-                });
+                }); */
         }
         catch (e) {
             blockingLoader.hide();
-            if(e.response && e.response.data && e.response.data.code === 403)
-                abstractModal.Alert('warning', e.response.data.message, 'Error');
-            else
-                abstractModal.Alert('warning', 'Something went wrong, please verify your inputs and try again', 'Error');
+            if(e.message) {
+              abstractModal.Alert('warning', e.message, 'Error');
+            } else {
+                abstractModal.Alert('warning', e, 'Error');
+            }
 
             return;
         }
