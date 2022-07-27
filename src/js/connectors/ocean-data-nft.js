@@ -10,6 +10,12 @@ import web3 from './web3';
 const INBOUND_KEY = 'inbound_addrs'
 const OUTBOUND_KEY = 'outbound_addrs'
 
+
+const getCurrentAccount = async () => {
+  const accounts = await web3.eth.getAccounts();
+  return accounts[0]; 
+}
+
 class Node extends Nft {
   constructor(nftAddress, web3, network, config) {
     super(web3, network, null, config)
@@ -38,12 +44,12 @@ class Node extends Nft {
     return await this._getAddrs(INBOUND_KEY)
   }
 
-  async addInboundNode(account, node) {
-    await this.addInboundAddr(account, node.nftAddress)
+  async addInboundNode(node) {
+    await this.addInboundAddr(node.nftAddress)
   }
   
-  async addInboundAddr(account, nodeAddress) {
-    await this._addAddr(account, INBOUND_KEY, nodeAddress)
+  async addInboundAddr(nodeAddress) {
+    await this._addAddr(INBOUND_KEY, nodeAddress)
   }
 
   // ==== outbounds ====
@@ -52,12 +58,12 @@ class Node extends Nft {
     return await this._getAddrs(OUTBOUND_KEY)
   }
 
-  async addOutboundNode(account, node) {
-    await this.addOutboundAddr(account, node.nftAddress)
+  async addOutboundNode(node) {
+    await this.addOutboundAddr(node.nftAddress)
   }
   
-  async addOutboundAddr(account, nodeAddress) {
-    await this._addAddr(account, OUTBOUND_KEY, nodeAddress)
+  async addOutboundAddr(nodeAddress) {
+    await this._addAddr(OUTBOUND_KEY, nodeAddress)
   }
 
   // ==== helpers ====
@@ -67,15 +73,15 @@ class Node extends Nft {
     return s.split(' ')
   }
 
-  async _addAddr(account, key, value) {
+  async _addAddr(key, value) {
     const s = await this.getNodeData(key)
     if (s.includes(value)) {
       throw new Error(`${value} already exists in ${key}`)
     }
-    await this.setNodeData(account, key, `${s} ${value}`)
+    await this.setNodeData(key, `${s} ${value}`)
   }
 
-  async setNodeData(account, key, value) {
+  async setNodeData(key, value) {
     // we need to updgrae @oceanprotocol/lib to support this
     // await this.setData(this.nftAddress, account, key, value)
   }
@@ -99,17 +105,19 @@ class NodeFactory {
     )
   }
 
-  async newGoal(name, account) {
+  async newGoal(name) {
     const symbol = `GOAL-${this._randomNumber()}`
-    return this._newNode(symbol, name, account)
+    return this._newNode(symbol, name)
   }
 
-  async newProject(name, account) {
+  async newProject(name) {
     const symbol = `PROJ-${this._randomNumber()}`
-    return this._newNode(symbol, name, account)
+    return this._newNode(symbol, name)
   }
 
-  async _newNode(symbol, name, account) {
+  async _newNode(symbol, name) {
+    const account = await getCurrentAccount()
+
     const nftParamsAsset = {
       name: name,
       symbol: symbol,
