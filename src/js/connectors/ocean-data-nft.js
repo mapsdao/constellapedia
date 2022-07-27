@@ -87,16 +87,14 @@ class Node extends Nft {
 }
 
 class NodeFactory {
-  constructor() {
-    console.log(web3)
-    const chainId = web3.eth.chainId()
-    console.log(chainId)
+  async init() {
+    const chainId = await web3.eth.getChainId()
 
     this.web3 = web3
     this.config = new ConfigHelper().getConfig(chainId)
 
     this.factory = new NftFactory(
-      config?.erc721FactoryAddress,
+      this.config?.erc721FactoryAddress,
       this.web3
     )
   }
