@@ -6,6 +6,7 @@ const abstractModal = require('../js/modals/abstract');
 const constellationTutModal = require('../js/modals/constellation-tut');
 const helpers = require('../js/helpers');
 const jsonURLConnector = require('./connectors/url-json');
+const { NodeFactory }  = require('./connectors/ocean-data-nft');
 
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
@@ -106,6 +107,11 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
     $scope.saveNode = async () => {
 
         blockingLoader.show();
+
+        // Test create node with OceanJS
+
+        const nodeFactory = new NodeFactory()
+        console.log(nodeFactory)
 
         try {
             if ($scope.formData.nodeId)
