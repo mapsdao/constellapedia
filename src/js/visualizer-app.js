@@ -78,8 +78,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
             content = {};
         }
 
-
-
         nodeEditor = new EditorJS({
             autofocus: false,
             placeholder: "Tell the story of this node...",
@@ -109,9 +107,8 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         blockingLoader.show();
 
         // Test create node with OceanJS
-
         const nodeFactory = new NodeFactory()
-        console.log(nodeFactory)
+        await nodeFactory.init()
 
         try {
             if ($scope.formData.nodeId)
@@ -186,16 +183,12 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
                     type: 'IMPLIES_THAT'
                 })
             });
-
         })
-
-
     };
 
     $scope.redrawConstellation = () => $timeout(draw, 0);
 
     $scope.toggleEdgesLabel = () => $scope.formData.options.edges.font.size = $scope.formData.edgesLabel ? 15 : 0;
-
 
     async function draw() {
 
@@ -205,7 +198,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         //relevant001
         const response = await jsonURLConnector('/json-test/foo.json');
-
 
         const nodes = new vis.DataSet(response.nodes);
         const edges = new vis.DataSet(response.edges);
@@ -248,7 +240,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
             !isSmall.matches && constellationTutModal.show();
         });
 
-
         constellation.on("doubleClick", function (event) {
             if(!event.nodes[0])
                 $timeout(() => $scope.openNodeOptionsPanel(), 0);
@@ -257,8 +248,5 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         });
 
     }
-
     draw();
-
-
 }]);
