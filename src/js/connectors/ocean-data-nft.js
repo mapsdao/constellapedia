@@ -151,6 +151,7 @@ class NodeFactory {
       metadata: metadata
     }
 
+    console.log(this.config.providerUri)
     const providerResponse = await ProviderInstance.encrypt(ddo, this.config.providerUri)
     const encryptedResponse = await providerResponse
 
@@ -175,7 +176,7 @@ class NodeFactory {
 
     console.log(resolvedDDO)
 
-    const node = new Node(nftAddress, this.web3, this.network, this.config)
+    const node = new Node(nftAddress, this.web3, this.chainId, this.config)
     await node.setNodeData(account, INBOUND_KEY, "")
     await node.setNodeData(account, OUTBOUND_KEY, "")
     return node
