@@ -1,15 +1,18 @@
 const {
-  NftFactory,
+  Aquarius,
   configHelperNetworks,
   ConfigHelper,
+  generateDid,
+  getHash,
   Nft,
+  NftFactory,
+  ProviderInstance,
   setContractDefaults
 } = require('@oceanprotocol/lib')
 import web3 from './web3';
 
 const INBOUND_KEY = 'inbound_addrs'
 const OUTBOUND_KEY = 'outbound_addrs'
-
 
 const getCurrentAccount = async () => {
   const accounts = await web3.eth.getAccounts();
@@ -94,28 +97,27 @@ class Node extends Nft {
 
 class NodeFactory {
   async init() {
-    const chainId = await web3.eth.getChainId()
-
+    this.chainId = await web3.eth.getChainId()
     this.web3 = web3
-    this.config = new ConfigHelper().getConfig(chainId)
+    this.config = new ConfigHelper().getConfig(this.chainId)
 
     this.factory = new NftFactory(
-      this.config?.erc721FactoryAddress,
+      this.config.erc721FactoryAddress,
       this.web3
     )
   }
 
   async newGoal(name) {
     const symbol = `GOAL-${this._randomNumber()}`
-    return this._newNode(symbol, name)
+    return this._newNode(symbol, name, 'GOAL')
   }
 
   async newProject(name) {
     const symbol = `PROJ-${this._randomNumber()}`
-    return this._newNode(symbol, name)
+    return this._newNode(symbol, name, 'PROJECT')
   }
 
-  async _newNode(symbol, name) {
+  async _newNode(symbol, name, type) {
     const account = await getCurrentAccount()
 
     const nftParamsAsset = {
@@ -128,6 +130,50 @@ class NodeFactory {
     }
 
     const nftAddress = await this.factory.createNFT(account, nftParamsAsset)
+
+    const metadata = {
+      created: new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z'),
+      updated: new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z'),
+      type,
+      name: symbol,
+      description: name,
+      tags: 'themap',
+      author: 'TheMap',
+      license: 'https://market.oceanprotocol.com/terms'
+    }
+
+    const ddo = {
+      '@context': ['https://w3id.org/did/v1'],
+      id: generateDid(nftAddress, this.chainId),
+      nftAddress,
+      version: '4.1.0',
+      chainId: this.chainId,
+      metadata: metadata
+    }
+
+    const providerResponse = await ProviderInstance.encrypt(ddo, this.config.providerUri)
+    const encryptedResponse = await providerResponse
+
+    const metadataHash = getHash(JSON.stringify(ddo))
+
+    const nft = new Nft(this.web3)
+    console.log(ddo)
+    await nft.setMetadata(
+      nftAddress,
+      account,
+      0,
+      this.config.providerUri,
+      '',
+      '0x2',
+      encryptedResponse,
+      '0x' + metadataHash
+    )
+
+    console.log(this.config.metadataCacheUri)
+    const aquarius = new Aquarius(this.config.metadataCacheUri)
+    const resolvedDDO = await aquarius.waitForAqua(ddo.id)
+
+    console.log(resolvedDDO)
 
     const node = new Node(nftAddress, this.web3, this.network, this.config)
     await node.setNodeData(account, INBOUND_KEY, "")
