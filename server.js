@@ -20,11 +20,11 @@ global.app = app;
 global.utilities = require('@growishpay/service-utilities');
 
 
-app.get('/visualizer/:dataNFTtag', (req, res) => {
+app.get('/visualizer/:dataNFT', (req, res) => {
 
     res.render('visualizer', {
-        dataNFTtag: req.params.dataNFTtag,
-        title: req.params.dataNFTtag,
+        dataNFT: req.params.dataNFT,
+        title: req.params.dataNFT,
         options: Buffer.from(JSON.stringify({
             autoResize: true,
             nodes: {
