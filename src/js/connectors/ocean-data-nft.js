@@ -213,7 +213,6 @@ class NodeSearch {
 
   async querySearch(query, signal) {
     const path = this.aquarius.aquariusURL + '/api/aquarius/assets/query'
-    console.log(path)
 
     try {
       const response = await fetch(path, {
@@ -245,6 +244,10 @@ class NodeSearch {
       }
     } 
     const nodes = await this.querySearch(searchQuery)
+    if (nodes.hits && nodes.hits.hits) {
+      //return nodes.hits.hits.map(hit => hit._source)
+      nodes.hits.hits.map(hit => console.log(hit._source))
+    }
 
     console.log(nodes)
   }
