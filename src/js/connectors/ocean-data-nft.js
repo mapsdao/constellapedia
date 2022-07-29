@@ -118,8 +118,10 @@ class NodeFactory {
   }
 
   async _newNode(symbol, name, type) {
+    // get Metamask account
     const account = await getCurrentAccount()
 
+    // create new nft
     const nftParamsAsset = {
       name: name,
       symbol: symbol,
@@ -128,37 +130,53 @@ class NodeFactory {
       transferable: true,
       owner: account
     }
-
     const nftAddress = await this.factory.createNFT(account, nftParamsAsset)
 
-    const metadata = {
-      created: new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z'),
-      updated: new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z'),
-      type,
-      name: symbol,
-      description: name,
-      tags: 'themap',
-      author: 'TheMap',
-      license: 'https://market.oceanprotocol.com/terms'
-    }
-
+    // set ddo metadata
     const ddo = {
       '@context': ['https://w3id.org/did/v1'],
       id: generateDid(nftAddress, this.chainId),
       nftAddress,
       version: '4.1.0',
       chainId: this.chainId,
-      metadata: metadata
+      metadata: {
+        created: new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z'),
+        updated: new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z'),
+        type,
+        name: symbol,
+        description: name,
+        tags: 'themap',
+        author: 'TheMap',
+        license: 'https://market.oceanprotocol.com/terms'
+      },
+      services: [
+        {
+          id: 'testFakeId',
+          type: 'access',
+          files: '',
+          datatokenAddress: '0x0',
+          serviceEndpoint: 'https://v4.provider.rinkeby.oceanprotocol.com',
+          timeout: 0
+        }
+      ]
     }
+    console.log(ddo)
 
-    console.log(this.config.providerUri)
+    // encrypt ddo with provider service
+    console.log(`Provider service URL: ${this.config.providerUri}`)
     const providerResponse = await ProviderInstance.encrypt(ddo, this.config.providerUri)
     const encryptedResponse = await providerResponse
 
-    const metadataHash = getHash(JSON.stringify(ddo))
+    // validate ddo with aquarius service
+    console.log(`Aquarius service URL: ${this.config.metadataCacheUri}`)
+    const aquarius = new Aquarius(this.config.metadataCacheUri)
+    const validateResult = await aquarius.validate(ddo)
+    if (!validateResult.valid) {
+      throw new Error('Could not validate metadata')
+    }
 
+    // set ddo metadata on nft
     const nft = new Nft(this.web3)
-    console.log(ddo)
     await nft.setMetadata(
       nftAddress,
       account,
@@ -167,13 +185,11 @@ class NodeFactory {
       '',
       '0x2',
       encryptedResponse,
-      '0x' + metadataHash
+      validateResult.hash // '0x' + getHash(JSON.stringify(ddo))
     )
 
-    console.log(this.config.metadataCacheUri)
-    const aquarius = new Aquarius(this.config.metadataCacheUri)
+    // const aquarius = new Aquarius(this.config.metadataCacheUri)
     const resolvedDDO = await aquarius.waitForAqua(ddo.id)
-
     console.log(resolvedDDO)
 
     const node = new Node(nftAddress, this.web3, this.chainId, this.config)
