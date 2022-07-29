@@ -204,5 +204,52 @@ class NodeFactory {
   }
 }
 
+class NodeSearch {
+  async init() {
+    this.chainId = await web3.eth.getChainId()
+    this.config = new ConfigHelper().getConfig(this.chainId)
+    this.aquarius = new Aquarius(this.config.metadataCacheUri)
+  }
+
+  async querySearch(query, signal) {
+    const path = this.aquarius.aquariusURL + '/api/aquarius/assets/query'
+    console.log(path)
+
+    try {
+      const response = await fetch(path, {
+        method: 'POST',
+        body: JSON.stringify(query),
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        signal: signal
+      })
+
+      if (response.ok) {
+        return response.json()
+      } else {
+        throw new Error('querySearch failed: ' + response.status + response.statusText)
+      }
+    } catch (error) {
+      throw new Error('Error querying metadata: ' + error)
+    }
+  }
+
+  async search() {
+    //const nodes = await this.aquarius.search(query)
+    const searchQuery = {
+      query: {
+        query_string: {
+          query: "*"
+        }
+      }
+    } 
+    const nodes = await this.querySearch(searchQuery)
+
+    console.log(nodes)
+  }
+}
+
 module.exports.Node = Node
 module.exports.NodeFactory = NodeFactory
+module.exports.NodeSearch = NodeSearch

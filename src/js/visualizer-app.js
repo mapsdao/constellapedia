@@ -6,7 +6,7 @@ const abstractModal = require('../js/modals/abstract');
 const constellationTutModal = require('../js/modals/constellation-tut');
 const helpers = require('../js/helpers');
 const jsonURLConnector = require('./connectors/url-json');
-const { NodeFactory }  = require('./connectors/ocean-data-nft');
+const { NodeFactory, NodeSearch }  = require('./connectors/ocean-data-nft');
 
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
@@ -163,6 +163,12 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         $timeout(()=>{ $scope.closeNodeOptionsPanel(); $scope.redrawConstellation(); }, 0);
 
     };
+
+    $scope.searchNodes = async () => {
+      const nodeSearch = new NodeSearch();
+      await nodeSearch.init();
+      await nodeSearch.search();
+    }
 
     $scope.deleteNode = () => {
 
