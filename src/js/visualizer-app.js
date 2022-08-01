@@ -109,7 +109,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         try {
             // Test create node with OceanJS
             const nodeFactory = new NodeFactory();
-            await nodeFactory.init();
 
             if (($scope.formData.nodeType !== '0') && ($scope.formData.nodeType !== '1')){
               throw new Error('Unknown node type');

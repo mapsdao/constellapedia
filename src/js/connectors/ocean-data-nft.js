@@ -96,17 +96,6 @@ class Node extends Nft {
 }
 
 class NodeFactory {
-  async init() {
-    this.chainId = await web3.eth.getChainId()
-    this.web3 = web3
-    this.config = new ConfigHelper().getConfig(this.chainId)
-
-    this.factory = new NftFactory(
-      this.config.erc721FactoryAddress,
-      this.web3
-    )
-  }
-
   async newGoal(name) {
     const symbol = `GOAL-${this._randomNumber()}`
     return this._newNode(symbol, name, 'GOAL')
@@ -118,6 +107,11 @@ class NodeFactory {
   }
 
   async _newNode(symbol, name, type) {
+    const chainId = await web3.eth.getChainId()
+    const config = new ConfigHelper().getConfig(chainId)
+
+    const factory = new NftFactory(config.erc721FactoryAddress, web3)
+
     // get Metamask account
     const account = await getCurrentAccount()
 
@@ -130,15 +124,15 @@ class NodeFactory {
       transferable: true,
       owner: account
     }
-    const nftAddress = await this.factory.createNFT(account, nftParamsAsset)
+    const nftAddress = await factory.createNFT(account, nftParamsAsset)
 
     // set ddo metadata
     const ddo = {
       '@context': ['https://w3id.org/did/v1'],
-      id: generateDid(nftAddress, this.chainId),
+      id: generateDid(nftAddress, chainId),
       nftAddress,
       version: '4.1.0',
-      chainId: this.chainId,
+      chainId: chainId,
       metadata: {
         created: new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z'),
         updated: new Date().toISOString().replace(/\.[0-9]{3}Z/, 'Z'),
@@ -163,36 +157,36 @@ class NodeFactory {
     console.log(ddo)
 
     // encrypt ddo with provider service
-    console.log(`Provider service URL: ${this.config.providerUri}`)
-    const providerResponse = await ProviderInstance.encrypt(ddo, this.config.providerUri)
+    console.log(`Provider service URL: ${config.providerUri}`)
+    const providerResponse = await ProviderInstance.encrypt(ddo, config.providerUri)
     const encryptedResponse = await providerResponse
 
     // validate ddo with aquarius service
-    console.log(`Aquarius service URL: ${this.config.metadataCacheUri}`)
-    const aquarius = new Aquarius(this.config.metadataCacheUri)
+    console.log(`Aquarius service URL: ${config.metadataCacheUri}`)
+    const aquarius = new Aquarius(config.metadataCacheUri)
     const validateResult = await aquarius.validate(ddo)
     if (!validateResult.valid) {
       throw new Error('Could not validate metadata')
     }
 
     // set ddo metadata on nft
-    const nft = new Nft(this.web3)
+    const nft = new Nft(web3)
     await nft.setMetadata(
       nftAddress,
       account,
       0,
-      this.config.providerUri,
+      config.providerUri,
       '',
       '0x2',
       encryptedResponse,
       validateResult.hash // '0x' + getHash(JSON.stringify(ddo))
     )
 
-    // const aquarius = new Aquarius(this.config.metadataCacheUri)
+    // const aquarius = new Aquarius(config.metadataCacheUri)
     const resolvedDDO = await aquarius.waitForAqua(ddo.id)
     console.log(resolvedDDO)
 
-    const node = new Node(nftAddress, this.web3, this.chainId, this.config)
+    const node = new Node(nftAddress, web3, chainId, config)
     await node.setNodeData(account, INBOUND_KEY, "")
     await node.setNodeData(account, OUTBOUND_KEY, "")
     return node
@@ -234,7 +228,6 @@ class NodeSearch {
     const chainId = await web3.eth.getChainId()
     const config = new ConfigHelper().getConfig(chainId)
 
-    //const nodes = await this.aquarius.search(query)
     const searchQuery = {
       "query": {
         "bool": {
