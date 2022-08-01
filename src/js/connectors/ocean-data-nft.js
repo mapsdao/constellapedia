@@ -237,12 +237,39 @@ class NodeSearch {
   async search() {
     //const nodes = await this.aquarius.search(query)
     const searchQuery = {
-      query: {
-        query_string: {
-          query: "*"
+      "query": {
+        "bool": {
+          "must": [
+            {
+              "bool": {
+                "should": [
+                  {
+                    "query_string": {
+                      "query": "(metadata.tags:\"themap\")",
+                      "fields": ["metadata.tags"],
+                      "default_operator": "AND"
+                    } 
+                  }
+                ]
+              }
+            }
+          ],
+          "filter": [
+            {
+              "terms": {
+                "chainId": [4]
+              }
+            },
+            {
+              "term": {
+                "purgatory.state": false
+              }
+            }
+          ]
         }
-      }
-    } 
+      },
+      "size": 10000
+    }
     const nodes = await this.querySearch(searchQuery)
     if (nodes.hits && nodes.hits.hits) {
       //return nodes.hits.hits.map(hit => hit._source)
