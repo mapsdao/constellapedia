@@ -166,7 +166,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
     $scope.searchNodes = async () => {
       const nodeSearch = new NodeSearch();
-      await nodeSearch.init();
       await nodeSearch.search();
     }
 

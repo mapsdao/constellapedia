@@ -205,14 +205,10 @@ class NodeFactory {
 }
 
 class NodeSearch {
-  async init() {
-    this.chainId = await web3.eth.getChainId()
-    this.config = new ConfigHelper().getConfig(this.chainId)
-    this.aquarius = new Aquarius(this.config.metadataCacheUri)
-  }
+  async querySearch(config, query, signal) {
+    const aquarius = new Aquarius(config.metadataCacheUri)
 
-  async querySearch(query, signal) {
-    const path = this.aquarius.aquariusURL + '/api/aquarius/assets/query'
+    const path = aquarius.aquariusURL + '/api/aquarius/assets/query'
 
     try {
       const response = await fetch(path, {
@@ -235,6 +231,9 @@ class NodeSearch {
   }
 
   async search() {
+    const chainId = await web3.eth.getChainId()
+    const config = new ConfigHelper().getConfig(chainId)
+
     //const nodes = await this.aquarius.search(query)
     const searchQuery = {
       "query": {
@@ -257,7 +256,7 @@ class NodeSearch {
           "filter": [
             {
               "terms": {
-                "chainId": [4]
+                "chainId": [chainId]
               }
             },
             {
@@ -270,7 +269,7 @@ class NodeSearch {
       },
       "size": 10000
     }
-    const nodes = await this.querySearch(searchQuery)
+    const nodes = await this.querySearch(config, searchQuery)
     if (nodes.hits && nodes.hits.hits) {
       //return nodes.hits.hits.map(hit => hit._source)
       nodes.hits.hits.map(hit => console.log(hit._source))
