@@ -31,18 +31,18 @@ You'll need a host machine with NodeJS 15+
 
 - Install dependencies
 ```bash
-yarn install
+npm i
 ```
 - Build the front end and keep a watcher for changes
 ```bash
-yarn dev
+npm run dev
 ```
 This will create a folder named **public** with the FE code compiled in the root of the project 
 and listen to changes in **/src**.
 
 - Start an HTML server for serving the FE
 ```bash
-yarn server
+npm run server
 ```
 
 If everything went well, you should have a functioning auto reloading frontend in **http://127.0.0.1:8080/visualizer/foo**
