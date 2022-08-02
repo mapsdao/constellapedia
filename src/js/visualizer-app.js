@@ -6,7 +6,7 @@ const abstractModal = require('../js/modals/abstract');
 const constellationTutModal = require('../js/modals/constellation-tut');
 const helpers = require('../js/helpers');
 const jsonURLConnector = require('./connectors/url-json');
-const { NodeFactory, NodeSearch }  = require('./connectors/ocean-data-nft');
+const { NodeFactory, NodeSearch }  = require('@themapglobal/themap-ocean.js');
 
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";

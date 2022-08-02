@@ -14,8 +14,7 @@ to the Ocean protocol.
 │   ├── img                         # Static image assets
 │   ├── js                          # FE JS sources
 │   │   ├── connectors              # Modules that provide the data to the app
-│   │   │   ├── url-json            # Simple connector for fetching a JSON from a URL
-│   │   │   └── ocean-data-nft.js   # Connector for the Ocean protocol (TODO)
+│   │   │   └── url-json            # Simple connector for fetching a JSON from a URL
 │   │   ├── modals                  # UI Modals
 │   │   └── visualizer-app.js       # The main FE application logic
 │   ├── scss                        # Saas application styles
