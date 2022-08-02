@@ -18,7 +18,6 @@
     "@editorjs/table": "2.0.1",
     "@editorjs/underline": "1.0.0",
     "@growishpay/service-utilities": "git+https://github.com/Growish/service-utilities.git",
-    "@oceanprotocol/lib": "^1.1.6",
     "@sweetalert2/theme-dark": "^5.0.10",
     "@themapglobal/themap-ocean.js": "https://github.com/themapglobal/themap-ocean.js.git",
     "animate.css": "^4.1.1",
@@ -28,11 +27,18 @@
     "express": "^4.17.3",
     "moment": "^2.29.1",
     "noty": "^3.2.0-beta-deprecated",
-    "sweetalert2": "^11.4.4",
-    "web3": "^1.7.4"
+    "sweetalert2": "^11.4.4"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.3.2",
-    "parcel": "^2.3.2"
+    "assert": "^2.0.0",
+    "events": "^3.3.0",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
+    "parcel": "^2.3.2",
+    "querystring-es3": "^0.2.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.0"
   }
 }
