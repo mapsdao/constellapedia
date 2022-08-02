@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "",
   "scripts": {
-    "build": "parcel build ./src/*.html --dist-dir ./public --public-url '/'",
+    "build": "parcel build ./src/*.html --dist-dir ./public --public-url '/' --no-scope-hoist",
     "dev": "rm -rf public & parcel watch ./src/*.html --dist-dir ./public --public-url '/'",
     "server": "node server.js"
   },
