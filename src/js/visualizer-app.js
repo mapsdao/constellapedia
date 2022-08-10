@@ -165,7 +165,15 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
     $scope.searchNodes = async () => {
       const nodeSearch = new NodeSearch();
-      await nodeSearch.search();
+      console.log($scope.formData.searchText);
+      const nodes = await nodeSearch.searchText($scope.formData.searchText);
+      console.log(nodes);
+    }
+
+    $scope.searchAllNodes = async () => {
+      const nodeSearch = new NodeSearch();
+      const nodes = await nodeSearch.searchAll();
+      console.log(nodes);
     }
 
     $scope.deleteNode = () => {
