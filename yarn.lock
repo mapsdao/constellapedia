@@ -1082,7 +1082,7 @@
 
 "@themapglobal/themap-ocean.js@https://github.com/themapglobal/themap-ocean.js.git":
   version "1.0.0"
-  resolved "https://github.com/themapglobal/themap-ocean.js.git#b4f702e06bd8c5bf37a42957eb0d3e626d8b693e"
+  resolved "https://github.com/themapglobal/themap-ocean.js.git#b27cfa4660bbc25a2ed12957bd99ae65a701530f"
   dependencies:
     "@oceanprotocol/lib" "^1.1.8"
     web3 "^1.7.4"
