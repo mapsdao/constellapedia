@@ -132,10 +132,14 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
                 const newGoal = await nodeFactory.newGoal(
                   $scope.formData.nodeTitle
                 )
+                await newGoal.setNodeData("testkey", "testvalue");
+                console.log(await newGoal.getNodeData("testkey"));
               } else if ($scope.formData.nodeType === '1') {
                 const newProject = await nodeFactory.newProject(
                   $scope.formData.nodeTitle
                 )
+                await newGoal.setNodeData("testkey", "testvalue");
+                console.log(await newGoal.getNodeData("testkey"));
               }
               /* await axios.post(process.env.API_BASEURL + '/nodes/', {
                   name: $scope.formData.nodeTitle,
