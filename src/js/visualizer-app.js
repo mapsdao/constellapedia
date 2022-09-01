@@ -169,7 +169,7 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
     $scope.searchNodes = async () => {
       const nodeSearch = new NodeSearch();
-      const nodes = await nodeSearch.searchText($scope.formData.searchText);
+      const nodes = await nodeSearch.searchText($scope.formData.searchText ? $scope.formData.searchText : '');
       console.log(nodes);
     }
 
@@ -179,18 +179,86 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
       const nodes = await Promise.all(
         result.map(async function(node){
             return {
-                name: await node.name(),
+                symbol: await node.symbol(),
                 nftAddress: node.nftAddress,
                 nftAbi: node.nftAbi,
                 config: node.config,
                 web3: node.web3,
                 inboundEdges: await node.getInboundAddrs(),
-                outboundEdges: await node.getOutboundAddrs()
+                outboundEdges: await node.getOutboundAddrs(),
+                id: node.id,
+                name: node.description
             }
         })
       );
-      return nodes;
+      console.log(nodes)
+      return nodes
     }
+
+    $scope.mapNodes = (nodes) =>{
+        return nodes.map(function(node){
+            return {
+                id: node.id,
+                label: node.name,
+                color: 'green'
+            }
+        });
+    }
+
+    $scope.mapEdges = (nodesList) => {
+        let edges = [];
+        nodesList.forEach(function(node){
+            const inboundEdges = $scope.mapNodeEdges(node, nodesList, 'inbound');
+            const outboundEdges = $scope.mapNodeEdges(node, nodesList, 'outbound');
+            if (inboundEdges.length > 0) edges.push(...inboundEdges);
+            if (outboundEdges.length > 0) edges.push(...outboundEdges);
+        })
+        return edges;
+    }
+
+    $scope.mapNodeEdges = (node, nodes, direction) => {
+        let nodeEdges = [];
+        let edges = direction == 'inbound' ? node.inboundEdges : node.outboundEdges;
+        edges = edges.filter(edge => edge != '\x00')
+        if (edges.length > 0){
+            edges.forEach(function(edge){
+                const edgeNode = nodes.find(element => element.nftAddress == edge);
+                if (edgeNode){
+                    direction == 'inbound' ? 
+                    nodeEdges.push(
+                        {
+                            from: edgeNode.id,
+                            to: node.id,
+                            arrows: 'to'
+                        }
+                    )
+                    :
+                    nodeEdges.push(
+                        {
+                            from: node.id,
+                            to: edgeNode.id,
+                            arrows: 'to'
+                        }
+                    );
+                }
+            })
+        }
+        return nodeEdges;
+    }
+
+    //USED TO MANUALLY ADD EDGES TO THE GRAPH
+    // $scope.addEdges = async () => {
+    //     blockingLoader.show();
+    //     const nodeSearch = new NodeSearch();
+    //     const result = await nodeSearch.searchAll();
+
+    //     await result[7].addInboundNode(result[1]);
+    //     await result[7].addOutboundNode(result[2]);
+    //     $scope.redrawConstellation();
+
+    //     console.log(await nodeSearch.searchAll());
+    //     blockingLoader.hide();
+    // }
 
     $scope.deleteNode = () => {
 
@@ -222,7 +290,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         if(!$scope.formData.nodeTitle)
             return abstractModal.Toast('error', "A node title must be added first");
-
         selectNodeModal.show(window.constellation, direction === 'from' ? "To node" : "From node", (node)=>{
 
             $timeout(()=>{
@@ -245,27 +312,17 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         $scope.drawPanelIsOpen = false;
 
-        //relevant001
-        const response = await jsonURLConnector('/json-test/foo.json');
-
-        const searchResult = await $scope.searchAllNodes();
-        const mappedNodes = searchResult.map(function(node){
-            return {
-                id: node.nftAddress,
-                label: node.name,
-                color: 'green'
-            }
-        });
-
-
-        const nodes = new vis.DataSet(mappedNodes);
-        //const edges = new vis.DataSet(response.edges);
+        
+        const allNodes = await $scope.searchAllNodes();
+        
+        const nodes = new vis.DataSet($scope.mapNodes(allNodes));
+        const edges = new vis.DataSet($scope.mapEdges(allNodes));
 
         const container = document.getElementById("constellation");
 
         const data = {
             nodes: nodes,
-            //edges: edges,
+            edges: edges,
         };
 
         let constellation;
