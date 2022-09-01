@@ -24,7 +24,7 @@ app.get('/visualizer/:dataNFT', (req, res) => {
 
     res.render('visualizer', {
         dataNFT: req.params.dataNFT,
-        title: "Foo",
+        title: req.params.dataNFT,
         options: Buffer.from(JSON.stringify({
             autoResize: true,
             nodes: {

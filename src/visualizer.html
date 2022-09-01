@@ -51,6 +51,31 @@
             <p class="small-text">some draw options are still experimental</p>
         </div>
 
+        <br/>
+        <div class="text-center">
+            <button class="button button-outline" ng-click="openNodeOptionsPanel()">Create node</button>
+            <p class="small-text">starting here you can create goals and projects</p>
+        </div>
+
+        <br/>
+        <div>
+          <input type="text" ng-model="formData.searchText" style="background-color: white;">
+        </div>
+        <div class="text-center">
+            <button class="button button-outline" ng-click="searchNodes()">Search nodes
+            </button>
+        </div>
+
+        <br/>
+        <div class="text-center">
+            <button class="button button-outline" ng-click="searchAllNodes()">Search all nodes
+            </button>
+        </div>
+        <!-- <br/>
+        <div class="text-center">
+            <button class="button button-outline" ng-click="addEdges()">Add edges
+            </button>
+        </div> -->
 
         <label>Export data</label>
         <a href="#" ng-click="snapshot()">Snapshot PNG</a><br />
@@ -70,12 +95,12 @@
         <div ng-if="!formData.nodeId">
             <label>Type</label>
             <select ng-model="formData.nodeType">
-                <option value="0">Problem</option>
-                <option value="1">Solution</option>
+                <option value="0">Goal</option>
+                <option value="1">Project</option>
             </select>
         </div>
         <label ng-if="formData.nodeId">
-            <strong>{{formData.nodeType === 0 ? 'Problem' : 'Solution'}}</strong>
+            <strong>{{formData.nodeType === 0 ? 'Goal' : 'Project'}}</strong>
         </label>
 
         <input type="text" ng-model="formData.nodeTitle" placeholder="Node title" maxlength="60"/>

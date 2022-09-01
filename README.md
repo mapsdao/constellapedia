@@ -14,8 +14,7 @@ to the Ocean protocol.
 │   ├── img                         # Static image assets
 │   ├── js                          # FE JS sources
 │   │   ├── connectors              # Modules that provide the data to the app
-│   │   │   ├── url-json            # Simple connector for fetching a JSON from a URL
-│   │   │   └── ocean-data-nft.js   # Connector for the Ocean protocol (TODO)
+│   │   │   └── url-json            # Simple connector for fetching a JSON from a URL
 │   │   ├── modals                  # UI Modals
 │   │   └── visualizer-app.js       # The main FE application logic
 │   ├── scss                        # Saas application styles
@@ -31,18 +30,18 @@ You'll need a host machine with NodeJS 15+
 
 - Install dependencies
 ```bash
-npm i
+yarn install
 ```
 - Build the front end and keep a watcher for changes
 ```bash
-npm run dev
+yarn dev
 ```
 This will create a folder named **public** with the FE code compiled in the root of the project 
 and listen to changes in **/src**.
 
 - Start an HTML server for serving the FE
 ```bash
-npm run server
+yarn server
 ```
 
 If everything went well, you should have a functioning auto reloading frontend in **http://127.0.0.1:8080/visualizer/foo**

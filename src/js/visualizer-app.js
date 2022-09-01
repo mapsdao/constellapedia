@@ -6,6 +6,7 @@ const abstractModal = require('../js/modals/abstract');
 const constellationTutModal = require('../js/modals/constellation-tut');
 const helpers = require('../js/helpers');
 const jsonURLConnector = require('./connectors/url-json');
+const { NodeFactory, NodeSearch }  = require('@themapglobal/themap-ocean.js');
 
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
@@ -77,8 +78,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
             content = {};
         }
 
-
-
         nodeEditor = new EditorJS({
             autofocus: false,
             placeholder: "Tell the story of this node...",
@@ -108,28 +107,56 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         blockingLoader.show();
 
         try {
-            if ($scope.formData.nodeId)
-                await axios.put(process.env.API_BASEURL + '/nodes/' + $scope.formData.nodeId, {
+            // Test create node with OceanJS
+            const nodeFactory = new NodeFactory();
+
+            if (($scope.formData.nodeType !== '0') && ($scope.formData.nodeType !== '1')){
+              throw new Error('Unknown node type');
+            }
+            if (!$scope.formData.nodeTitle) {
+              throw new Error('You must specify a title');
+            }
+
+            if ($scope.formData.nodeId) {
+              // update node
+              alert('update node');
+                /* await axios.put(process.env.API_BASEURL + '/nodes/' + $scope.formData.nodeId, {
                     name: $scope.formData.nodeTitle,
                     content: JSON.stringify(await nodeEditor.save()),
                     edges: $scope.formData.nodeEdges,
                     constellation: window.constellation
-                });
-            else
-                await axios.post(process.env.API_BASEURL + '/nodes/', {
-                    name: $scope.formData.nodeTitle,
-                    content: JSON.stringify(await nodeEditor.save()),
-                    edges: $scope.formData.nodeEdges,
-                    constellation: window.constellation,
-                    type: $scope.formData.nodeType
-                });
+                }); */
+            } else {
+              // create node
+              if ($scope.formData.nodeType === '0') {
+                const newGoal = await nodeFactory.newGoal(
+                  $scope.formData.nodeTitle
+                )
+                await newGoal.setNodeData("testkey", "testvalue");
+                console.log(await newGoal.getNodeData("testkey"));
+              } else if ($scope.formData.nodeType === '1') {
+                const newProject = await nodeFactory.newProject(
+                  $scope.formData.nodeTitle
+                )
+                await newGoal.setNodeData("testkey", "testvalue");
+                console.log(await newGoal.getNodeData("testkey"));
+              }
+              /* await axios.post(process.env.API_BASEURL + '/nodes/', {
+                  name: $scope.formData.nodeTitle,
+                  content: JSON.stringify(await nodeEditor.save()),
+                  edges: $scope.formData.nodeEdges,
+                  constellation: window.constellation,
+                  type: $scope.formData.nodeType
+              }); */
+            }
         }
         catch (e) {
             blockingLoader.hide();
-            if(e.response && e.response.data && e.response.data.code === 403)
-                abstractModal.Alert('warning', e.response.data.message, 'Error');
-            else
-                abstractModal.Alert('warning', 'Something went wrong, please verify your inputs and try again', 'Error');
+            if(e.message) {
+              abstractModal.Alert('warning', e.message, 'Error');
+            } else {
+                abstractModal.Alert('warning', e, 'Error');
+            }
 
             return;
         }
@@ -139,6 +166,115 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         $timeout(()=>{ $scope.closeNodeOptionsPanel(); $scope.redrawConstellation(); }, 0);
 
     };
+
+    $scope.searchNodes = async () => {
+      const nodeSearch = new NodeSearch();
+      const result = await nodeSearch.searchText($scope.formData.searchText ? $scope.formData.searchText : '');
+      const nodes = await Promise.all(
+        result.map(async function(node){
+            return {
+                symbol: await node.symbol(),
+                nftAddress: node.nftAddress,
+                nftAbi: node.nftAbi,
+                config: node.config,
+                web3: node.web3,
+                inboundEdges: await node.getInboundAddrs(),
+                outboundEdges: await node.getOutboundAddrs(),
+                id: node.id,
+                name: node.description
+            }
+        })
+      );
+      console.log(nodes)
+      return nodes
+    }
+
+    $scope.searchAllNodes = async () => {
+      const nodeSearch = new NodeSearch();
+      const result = await nodeSearch.searchAll();
+      const nodes = await Promise.all(
+        result.map(async function(node){
+            return {
+                symbol: await node.symbol(),
+                nftAddress: node.nftAddress,
+                nftAbi: node.nftAbi,
+                config: node.config,
+                web3: node.web3,
+                inboundEdges: await node.getInboundAddrs(),
+                outboundEdges: await node.getOutboundAddrs(),
+                id: node.id,
+                name: node.description
+            }
+        })
+      );
+      console.log(nodes)
+      return nodes
+    }
+
+    $scope.mapNodes = (nodes) =>{
+        return nodes.map(function(node){
+            return {
+                id: node.id,
+                label: node.name,
+                color: 'green'
+            }
+        });
+    }
+
+    $scope.mapEdges = (nodesList) => {
+        let edges = [];
+        nodesList.forEach(function(node){
+            const inboundEdges = $scope.mapNodeEdges(node, nodesList, 'inbound');
+            const outboundEdges = $scope.mapNodeEdges(node, nodesList, 'outbound');
+            if (inboundEdges.length > 0) edges.push(...inboundEdges);
+            if (outboundEdges.length > 0) edges.push(...outboundEdges);
+        })
+        return edges;
+    }
+
+    $scope.mapNodeEdges = (node, nodes, direction) => {
+        let nodeEdges = [];
+        let edges = direction == 'inbound' ? node.inboundEdges : node.outboundEdges;
+        edges = edges.filter(edge => edge != '\x00')
+        if (edges.length > 0){
+            edges.forEach(function(edge){
+                const edgeNode = nodes.find(element => element.nftAddress == edge);
+                if (edgeNode){
+                    direction == 'inbound' ? 
+                    nodeEdges.push(
+                        {
+                            from: edgeNode.id,
+                            to: node.id,
+                            arrows: 'to'
+                        }
+                    )
+                    :
+                    nodeEdges.push(
+                        {
+                            from: node.id,
+                            to: edgeNode.id,
+                            arrows: 'to'
+                        }
+                    );
+                }
+            })
+        }
+        return nodeEdges;
+    }
+
+    //USED TO MANUALLY ADD EDGES TO THE GRAPH
+    // $scope.addEdges = async () => {
+    //     blockingLoader.show();
+    //     const nodeSearch = new NodeSearch();
+    //     const result = await nodeSearch.searchAll();
+
+    //     await result[7].addInboundNode(result[1]);
+    //     await result[7].addOutboundNode(result[2]);
+    //     $scope.redrawConstellation();
+
+    //     console.log(await nodeSearch.searchAll());
+    //     blockingLoader.hide();
+    // }
 
     $scope.deleteNode = () => {
 
@@ -170,7 +306,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         if(!$scope.formData.nodeTitle)
             return abstractModal.Toast('error', "A node title must be added first");
-
         selectNodeModal.show(window.constellation, direction === 'from' ? "To node" : "From node", (node)=>{
 
             $timeout(()=>{
@@ -180,16 +315,12 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
                     type: 'IMPLIES_THAT'
                 })
             });
-
         })
-
-
     };
 
     $scope.redrawConstellation = () => $timeout(draw, 0);
 
     $scope.toggleEdgesLabel = () => $scope.formData.options.edges.font.size = $scope.formData.edgesLabel ? 15 : 0;
-
 
     async function draw() {
 
@@ -197,12 +328,11 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         $scope.drawPanelIsOpen = false;
 
-        //relevant001
-        const response = await jsonURLConnector('/json-test/foo.json');
-
-
-        const nodes = new vis.DataSet(response.nodes);
-        const edges = new vis.DataSet(response.edges);
+        
+        const allNodes = await $scope.searchAllNodes();
+        
+        const nodes = new vis.DataSet($scope.mapNodes(allNodes));
+        const edges = new vis.DataSet($scope.mapEdges(allNodes));
 
         const container = document.getElementById("constellation");
 
@@ -242,17 +372,13 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
             !isSmall.matches && constellationTutModal.show();
         });
 
-
-/*        constellation.on("doubleClick", function (event) {
+        constellation.on("doubleClick", function (event) {
             if(!event.nodes[0])
                 $timeout(() => $scope.openNodeOptionsPanel(), 0);
             else
                 $timeout(() => $scope.openNodeOptionsPanel(event.nodes[0]), 0);
-        });*/
+        });
 
     }
-
     draw();
-
-
 }]);
