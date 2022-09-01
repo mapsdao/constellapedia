@@ -175,8 +175,21 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
     $scope.searchAllNodes = async () => {
       const nodeSearch = new NodeSearch();
-      const nodes = await nodeSearch.searchAll();
-      console.log(nodes);
+      const result = await nodeSearch.searchAll();
+      const nodes = await Promise.all(
+        result.map(async function(node){
+            return {
+                name: await node.name(),
+                nftAddress: node.nftAddress,
+                nftAbi: node.nftAbi,
+                config: node.config,
+                web3: node.web3,
+                inboundEdges: await node.getInboundAddrs(),
+                outboundEdges: await node.getOutboundAddrs()
+            }
+        })
+      );
+      return nodes;
     }
 
     $scope.deleteNode = () => {
@@ -235,14 +248,24 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         //relevant001
         const response = await jsonURLConnector('/json-test/foo.json');
 
-        const nodes = new vis.DataSet(response.nodes);
-        const edges = new vis.DataSet(response.edges);
+        const searchResult = await $scope.searchAllNodes();
+        const mappedNodes = searchResult.map(function(node){
+            return {
+                id: node.nftAddress,
+                label: node.name,
+                color: 'green'
+            }
+        });
+
+
+        const nodes = new vis.DataSet(mappedNodes);
+        //const edges = new vis.DataSet(response.edges);
 
         const container = document.getElementById("constellation");
 
         const data = {
             nodes: nodes,
-            edges: edges,
+            //edges: edges,
         };
 
         let constellation;
