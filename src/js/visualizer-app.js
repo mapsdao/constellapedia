@@ -169,8 +169,24 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
     $scope.searchNodes = async () => {
       const nodeSearch = new NodeSearch();
-      const nodes = await nodeSearch.searchText($scope.formData.searchText ? $scope.formData.searchText : '');
-      console.log(nodes);
+      const result = await nodeSearch.searchText($scope.formData.searchText ? $scope.formData.searchText : '');
+      const nodes = await Promise.all(
+        result.map(async function(node){
+            return {
+                symbol: await node.symbol(),
+                nftAddress: node.nftAddress,
+                nftAbi: node.nftAbi,
+                config: node.config,
+                web3: node.web3,
+                inboundEdges: await node.getInboundAddrs(),
+                outboundEdges: await node.getOutboundAddrs(),
+                id: node.id,
+                name: node.description
+            }
+        })
+      );
+      console.log(nodes)
+      return nodes
     }
 
     $scope.searchAllNodes = async () => {
