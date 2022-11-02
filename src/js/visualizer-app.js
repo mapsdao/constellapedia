@@ -5,7 +5,7 @@ const confirmModal = require('../js/modals/confirm-dialog');
 const abstractModal = require('../js/modals/abstract');
 const constellationTutModal = require('../js/modals/constellation-tut');
 const helpers = require('../js/helpers');
-const jsonURLConnector = require('./connectors/url-json');
+const oceanConnector = require('./connectors/ocean-data-nft');
 
 import EditorJS from "@editorjs/editorjs";
 import Header from "@editorjs/header";
@@ -107,36 +107,7 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         blockingLoader.show();
 
-        try {
-            if ($scope.formData.nodeId)
-                await axios.put(process.env.API_BASEURL + '/nodes/' + $scope.formData.nodeId, {
-                    name: $scope.formData.nodeTitle,
-                    content: JSON.stringify(await nodeEditor.save()),
-                    edges: $scope.formData.nodeEdges,
-                    constellation: window.constellation
-                });
-            else
-                await axios.post(process.env.API_BASEURL + '/nodes/', {
-                    name: $scope.formData.nodeTitle,
-                    content: JSON.stringify(await nodeEditor.save()),
-                    edges: $scope.formData.nodeEdges,
-                    constellation: window.constellation,
-                    type: $scope.formData.nodeType
-                });
-        }
-        catch (e) {
-            blockingLoader.hide();
-            if(e.response && e.response.data && e.response.data.code === 403)
-                abstractModal.Alert('warning', e.response.data.message, 'Error');
-            else
-                abstractModal.Alert('warning', 'Something went wrong, please verify your inputs and try again', 'Error');
-
-            return;
-        }
-
         blockingLoader.hide();
-
-        $timeout(()=>{ $scope.closeNodeOptionsPanel(); $scope.redrawConstellation(); }, 0);
 
     };
 
@@ -144,17 +115,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         confirmModal.show(async ()=>{
             blockingLoader.show();
-            try {
-                await axios.delete(process.env.API_BASEURL + '/nodes/' + $scope.formData.nodeId + "?constellation=" + window.constellation);
-            }
-            catch (e) {
-
-                blockingLoader.hide();
-                if(e.response && e.response.data && e.response.data.code === 403)
-                    abstractModal.Alert('warning', e.response.data.message, 'Error');
-
-                return;
-            }
 
             $scope.closeNodeOptionsPanel();
             $scope.redrawConstellation();
@@ -197,59 +157,62 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
         $scope.drawPanelIsOpen = false;
 
-        //relevant001
-        const response = await jsonURLConnector('/json-test/foo.json');
+        try {
+            const response = await oceanConnector.getData();
 
 
-        const nodes = new vis.DataSet(response.nodes);
-        const edges = new vis.DataSet(response.edges);
+            const nodes = new vis.DataSet(response.nodes);
+            const edges = new vis.DataSet(response.edges);
 
-        const container = document.getElementById("constellation");
+            const container = document.getElementById("constellation");
 
-        const data = {
-            nodes: nodes,
-            edges: edges,
-        };
+            const data = {
+                nodes: nodes,
+                edges: edges,
+            };
 
-        let constellation;
+            let constellation;
 
-        if(!$scope.formData)
-            $scope.formData = {};
+            if (!$scope.formData)
+                $scope.formData = {};
 
-        if(!$scope.formData.options)
-            $scope.formData = { options: JSON.parse(atob(window.options)) };
+            if (!$scope.formData.options)
+                $scope.formData = {options: require('./default-rendering-options')};
 
-        $scope.formData.edgesLabel = !!$scope.formData.options.edges.font.size;
+            $scope.formData.edgesLabel = !!$scope.formData.options.edges.font.size;
 
-        constellation = new vis.Network(container, data, $scope.formData.options);
+            constellation = new vis.Network(container, data, $scope.formData.options);
 
-        constellation.on("stabilizationProgress", function (params) {
-            blockingLoader.setProgress(Math.round(100 * params.iterations / params.total));
-        });
+            constellation.on("stabilizationProgress", function (params) {
+                blockingLoader.setProgress(Math.round(100 * params.iterations / params.total));
+            });
 
-        constellation.once("stabilizationIterationsDone", function () {
+            constellation.once("stabilizationIterationsDone", function () {
+                blockingLoader.hide();
+            });
+
+            constellation.once("afterDrawing", function () {
+
+                blockingLoader.hide();
+
+                const isSmall = window.matchMedia ?
+                    window.matchMedia("screen and (max-width: 480px)") :
+                    screen.width <= 670;
+
+                !isSmall.matches && constellationTutModal.show();
+            });
+
+
+            /*        constellation.on("doubleClick", function (event) {
+                        if(!event.nodes[0])
+                            $timeout(() => $scope.openNodeOptionsPanel(), 0);
+                        else
+                            $timeout(() => $scope.openNodeOptionsPanel(event.nodes[0]), 0);
+                    });*/
+        } catch (error) {
             blockingLoader.hide();
-        });
-
-        constellation.once("afterDrawing", function () {
-
-            blockingLoader.hide();
-
-            const isSmall = window.matchMedia ?
-                window.matchMedia("screen and (max-width: 480px)") :
-                screen.width<=670;
-
-            !isSmall.matches && constellationTutModal.show();
-        });
-
-
-/*        constellation.on("doubleClick", function (event) {
-            if(!event.nodes[0])
-                $timeout(() => $scope.openNodeOptionsPanel(), 0);
-            else
-                $timeout(() => $scope.openNodeOptionsPanel(event.nodes[0]), 0);
-        });*/
-
+            abstractModal.Alert("error", error.message, "Oh oh!");
+        }
     }
 
     draw();

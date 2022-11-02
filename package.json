@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "build": "parcel build ./src/*.html --dist-dir ./public --public-url '/'",
-    "dev": "rm -rf public & parcel watch ./src/*.html --dist-dir ./public --public-url '/'",
+    "dev": "rm -rf public & parcel ./src/*.html --dist-dir ./public --public-url '/'",
     "server": "node server.js"
   },
   "author": "Domingo Lupo",
@@ -26,10 +26,12 @@
     "express": "^4.17.3",
     "moment": "^2.29.1",
     "noty": "^3.2.0-beta-deprecated",
-    "sweetalert2": "^11.4.4"
+    "sweetalert2": "^11.4.4",
+    "themap-ocean.js": "github:themapglobal/themap-ocean.js"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.3.2",
+    "os-browserify": "^0.3.0",
     "parcel": "^2.3.2"
   }
 }
