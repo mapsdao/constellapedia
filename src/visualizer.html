@@ -18,11 +18,11 @@
 
     <div id="constellation"></div>
     <div class="header hide-on-mobile">
-        <h1 class="elip">:title</h1>
+        <h1 class="elip">The Map demo</h1>
         <button class="button" ng-click="toggleDrawOptionsPanel()"><i class="lni lni-menu"></i></button>
     </div>
     <% if(source.name){ %>
-    <div class="source">Source: <a target="_blank">:source</a></div>
+    <div class="source">Source: <a target="_blank">The map</a></div>
     <% } %>
 </div>
 
@@ -48,8 +48,7 @@
 
         <label>Export data</label>
         <a href="#" ng-click="snapshot()">Snapshot PNG</a><br />
-        <a href="#" ng-click="jsonExport()">Constellation to JSON</a><br />
-        <a href="#" ng-click="forkConstellation()">Fork constellation</a>
+
 
 
     </div>
@@ -64,17 +63,15 @@
         <div ng-if="!formData.nodeId">
             <label>Type</label>
             <select ng-model="formData.nodeType">
-                <option value="0">Problem</option>
-                <option value="1">Solution</option>
+                <option value="goal">Goal</option>
+                <option value="project">Project</option>
             </select>
         </div>
         <label ng-if="formData.nodeId">
-            <strong>{{formData.nodeType === 0 ? 'Problem' : 'Solution'}}</strong>
+            <p class="dashed-underline">{{formData.nodeName}} (<small>{{formData.nodeId}}</small>)</p>
         </label>
 
         <input type="text" ng-model="formData.nodeTitle" placeholder="Node title" maxlength="60"/>
-
-        <div id="node-editor"></div>
 
         <br/><br/>
 
@@ -124,7 +121,8 @@
         <div class="foot">
 
             <div ng-if="formData.nodeId">
-                <p>This node has a publicly available page at: <a ng-href="{{'https://app.constellapedia.com/nodes/' + formData.nodeId}}">{{'https://app.constellapedia.com/nodes/' + formData.nodeId}}</a></p>
+                <p>This node is stored <a target="_blank" ng-href="{{'https://mumbai.polygonscan.com/address/' + formData.nodeId}}">on-chain</a></p>
+                <p><small>Powered by the <a href="https://oceanprotocol.com/" target="_blank">Ocean Protocol</a></small></p>
             </div>
             <br />
 

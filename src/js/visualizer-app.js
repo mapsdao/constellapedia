@@ -1,4 +1,3 @@
-const axios = require('axios');
 const blockingLoader = require('./blocking-loader');
 const selectNodeModal = require('../js/modals/select-node');
 const confirmModal = require('../js/modals/confirm-dialog');
@@ -7,16 +6,9 @@ const constellationTutModal = require('../js/modals/constellation-tut');
 const helpers = require('../js/helpers');
 const oceanConnector = require('./connectors/ocean-data-nft');
 
-import EditorJS from "@editorjs/editorjs";
-import Header from "@editorjs/header";
-import List from "@editorjs/list";
-import Underline from "@editorjs/underline";
-import Table from "@editorjs/table";
-import Delimiter from "@editorjs/delimiter";
-
 import 'animate.css';
 
-angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,async function ($scope, $timeout) {
+angular.module('constellation', []).controller('main', ['$scope', '$timeout', async function ($scope, $timeout) {
 
     blockingLoader.show();
     blockingLoader.setProgress(0);
@@ -28,7 +20,6 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         $scope.drawPanelIsOpen = !$scope.drawPanelIsOpen;
     };
 
-    let nodeEditor;
 
     $scope.snapshot = () => {
         const canvas = document.getElementsByTagName('canvas')[0];
@@ -39,64 +30,35 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         link.click();
     }
 
-    $scope.jsonExport = () => {
-        blockingLoader.show();
-        window.location = process.env.API_BASEURL + '/constellations/' + window.constellation + "?download=json";
-        blockingLoader.hide();
-    }
-
-    $scope.forkConstellation = () => {
-        abstractModal.Alert("info", "We are still in this feature, stay tuned!", "Work in progress!");
-    }
-
     $scope.closeNodeOptionsPanel = () => {
         $scope.nodePanelIsOpen = false;
-        nodeEditor.destroy();
     };
 
     $scope.openNodeOptionsPanel = async (nodeId) => {
 
         blockingLoader.show();
 
-        let content;
+        if (nodeId) {
 
-        if(nodeId) {
-
-            const response = (await axios.get(process.env.API_BASEURL + '/nodes/' + nodeId)).data.data;
+            const node = await oceanConnector.getNode(nodeId);
 
             $scope.formData.nodeId = nodeId;
-            $scope.formData.nodeTitle = helpers.capitalize(response.name);
-            $scope.formData.nodeEdges = response.edges;
-            content = JSON.parse(response.content);
-            $scope.formData.nodeType = response.type;
-        }
-        else {
+            $scope.formData.nodeName = node.metadata.name;
+            $scope.formData.nodeTags = node.metadata.tags;
+            $scope.formData.nodeTitle = node.metadata.description;
+            $scope.formData.nodeEdges = [];
+            $scope.formData.nodeType = node.metadata.additionalInformation.type;
+        } else {
             $scope.formData.nodeId = null;
             $scope.formData.nodeTitle = "";
+            $scope.formData.nodeName = "";
+            $scope.formData.nodeTags = [];
             $scope.formData.nodeEdges = [];
-            content = {};
+
         }
 
 
-
-        nodeEditor = new EditorJS({
-            autofocus: false,
-            placeholder: "Tell the story of this node...",
-            data: Object.keys(content).length === 0 ? null : content,
-            holder: "node-editor",
-            onReady: () => {
-            },
-            tools: {
-                header: Header,
-                list: List,
-                underline: Underline,
-                delimiter: Delimiter,
-                table: Table
-            }
-        });
-
-
-        $timeout(()=> $scope.nodePanelIsOpen = true, 0);
+        $timeout(() => $scope.nodePanelIsOpen = true, 0);
 
 
         blockingLoader.hide();
@@ -106,18 +68,70 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
     $scope.saveNode = async () => {
 
         blockingLoader.show();
+        console.log("$scope.formData", $scope.formData);
 
-        blockingLoader.hide();
+        if(!$scope.formData.nodeId)
+            oceanConnector.saveNode($scope.formData.nodeType, $scope.formData.nodeTitle,
+                (step, message) => {
+                    console.log(step, message);
+                    blockingLoader.setMessage(message);
+                }, (node) => {
+                    $scope.redrawConstellation();
+                    $timeout(()=>{$scope.nodePanelIsOpen = false;}, 0);
+                },
+                (error) => {
+                    blockingLoader.hide();
+                    abstractModal.Alert("error", error.message || "Something went wrong, please try again", "Oh oh!");
+                    console.log("FAIL", error);
+                }
+            );
+        else {
+            try {
+                const node = await oceanConnector.getNode($scope.formData.nodeId);
+                node.metadata.description = $scope.formData.nodeTitle;
+
+                blockingLoader.setMessage("Updating node");
+
+
+                await node.pushToAquarius();
+                blockingLoader.hide();
+                $scope.redrawConstellation();
+                $timeout(() => {
+                    $scope.nodePanelIsOpen = false;
+                }, 0);
+            }
+            catch (error) {
+                blockingLoader.hide();
+                abstractModal.Alert("error", error.message || "Something went wrong, please try again", "Oh oh!");
+            }
+        }
 
     };
 
     $scope.deleteNode = () => {
 
-        confirmModal.show(async ()=>{
-            blockingLoader.show();
+        confirmModal.show(async () => {
 
-            $scope.closeNodeOptionsPanel();
-            $scope.redrawConstellation();
+            try {
+                blockingLoader.show();
+                const node = await oceanConnector.getNode($scope.formData.nodeId);
+                node.metadata.additionalInformation.deleted = true;
+
+                blockingLoader.setMessage("Deleting node");
+
+
+                await node.pushToAquarius();
+                blockingLoader.hide();
+                $scope.redrawConstellation();
+                $timeout(() => {
+                    $scope.nodePanelIsOpen = false;
+                }, 0);
+            }
+            catch (error) {
+                blockingLoader.hide();
+                abstractModal.Alert("error", error.message || "Something went wrong, please try again", "Oh oh!");
+            }
+
         });
 
     };
@@ -128,15 +142,21 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
 
     $scope.addNodeEdge = (direction) => {
 
-        if(!$scope.formData.nodeTitle)
+        if (!$scope.formData.nodeTitle)
             return abstractModal.Toast('error', "A node title must be added first");
 
-        selectNodeModal.show(window.constellation, direction === 'from' ? "To node" : "From node", (node)=>{
+        selectNodeModal.show(window.constellation, direction === 'from' ? "To node" : "From node", (node) => {
 
-            $timeout(()=>{
+            $timeout(() => {
                 $scope.formData.nodeEdges.push({
-                    from: direction === 'from' ? { name: $scope.formData.nodeTitle, id: $scope.formData.nodeId} : { id: node.id, name: node.label },
-                    to: direction === 'to' ? { name: $scope.formData.nodeTitle, id: $scope.formData.nodeId} : { id: node.id, name: node.label },
+                    from: direction === 'from' ? {
+                        name: $scope.formData.nodeTitle,
+                        id: $scope.formData.nodeId
+                    } : {id: node.id, name: node.label},
+                    to: direction === 'to' ? {
+                        name: $scope.formData.nodeTitle,
+                        id: $scope.formData.nodeId
+                    } : {id: node.id, name: node.label},
                     type: 'IMPLIES_THAT'
                 })
             });
@@ -158,7 +178,7 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
         $scope.drawPanelIsOpen = false;
 
         try {
-            const response = await oceanConnector.getData();
+            const response = await oceanConnector.search();
 
 
             const nodes = new vis.DataSet(response.nodes);
@@ -203,14 +223,16 @@ angular.module('constellation', []).controller('main', [ '$scope', '$timeout' ,a
             });
 
 
-            /*        constellation.on("doubleClick", function (event) {
-                        if(!event.nodes[0])
-                            $timeout(() => $scope.openNodeOptionsPanel(), 0);
-                        else
-                            $timeout(() => $scope.openNodeOptionsPanel(event.nodes[0]), 0);
-                    });*/
+            constellation.on("doubleClick", function (event) {
+                if (!event.nodes[0])
+                    $timeout(() => $scope.openNodeOptionsPanel(), 0);
+                else
+                    $timeout(() => $scope.openNodeOptionsPanel(event.nodes[0]), 0);
+            });
+
         } catch (error) {
             blockingLoader.hide();
+            console.log(error);
             abstractModal.Alert("error", error.message, "Oh oh!");
         }
     }

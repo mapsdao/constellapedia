@@ -1,23 +1,19 @@
-import { NodeFactory, NodeSearch, connectWallet } from "themap-ocean.js";
+import { NodeFactory, NodeSearch, connectWallet as enforceWalletConnection } from "themap-ocean.js";
 const nodeSearch = new NodeSearch();
 
 
 const goalColor = '#8fce00';
 const projectTeamColor = '#ffd966';
 
-module.exports.getData = async () => {
 
-    try {
-        await connectWallet();
-    }
-    catch (error) {
-        return Promise.reject({ message: error.message || "Something went wrong" });
-    }
+module.exports.search = async (query) => {
+
+    await enforceWalletConnection();
 
     const nodes = [];
     const edges = [];
 
-    const nodesFromOcean = await nodeSearch.searchAll();
+    const nodesFromOcean = !query ? await nodeSearch.searchAll() : [];
 
     nodesFromOcean.forEach(node => {
 
@@ -50,4 +46,22 @@ module.exports.getData = async () => {
 
     console.log(nodesFromOcean);
     return { nodes, edges };
+};
+
+module.exports.getNode = async (nftAddress) => {
+
+    await enforceWalletConnection();
+
+    const node = await nodeSearch.searchByNftAddress(nftAddress);
+
+    return node;
+
+};
+
+module.exports.saveNode = (type, name, onProgress, done, onFail) => {
+
+    const Node = new NodeFactory();
+
+    return Node[type === 'goal' ? 'newGoal' : 'newProject'](name, onProgress, done, onFail)
+
 };

@@ -5,7 +5,7 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgb(0 0 0 / 50%);
+  background: rgb(0 0 0 / 80%);
 
 
   .loader-spinner {
@@ -23,19 +23,28 @@
     animation: spin 2s linear infinite;
   }
 
-  .loader-progress {
+  .loader-progress, .loader-message {
     position: absolute;
     color: white;
     font-weight: bold;
     text-align: center;
     left: 50%;
     top: 50%;
-    width: 60px;
     font-size: 12px;
-    margin: 25px 0 0 -38px;
     border: 1px solid #000;
     background: black;
     border-radius: 10px;
+    padding: 10px 20px;
+  }
+
+  .loader-progress {
+    width: 60px;
+    margin: 25px 0 0 -38px;
+  }
+
+  .loader-message {
+    width: 160px;
+    margin: 25px 0 0 -88px;
   }
 
 }

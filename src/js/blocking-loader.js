@@ -27,9 +27,15 @@ class BlockingLoader {
 
     hide() {
         this.el.style.display = "none";
+
         if(this.progressEl) {
             this.progressEl.style.display = "none";
             this.progressEl.innerHTML = "";
+        }
+
+        if(this.messageEl) {
+            this.messageEl.style.display = "none";
+            this.messageEl.innerHTML = "";
         }
     }
 
@@ -46,6 +52,21 @@ class BlockingLoader {
             this.progressEl.style.display = 'block';
 
         this.progressEl.innerHTML = number + "%";
+    }
+
+    setMessage(message) {
+
+        if(!this.messageEl) {
+            this.messageEl = document.createElement("span");
+            this.messageEl.classList.add("loader-message");
+
+            this.el.append(this.messageEl);
+        }
+
+        if(this.messageEl.style.display === 'none')
+            this.messageEl.style.display = 'block';
+
+        this.messageEl.innerHTML = message;
     }
 
 }
