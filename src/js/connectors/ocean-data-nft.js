@@ -39,7 +39,8 @@ module.exports.search = async (query) => {
             edges.push({
                 to: edge,
                 from: node.nftAddress,
-                label: ""
+                label: "depends on",
+                arrows: "to"
             });
         });
 
