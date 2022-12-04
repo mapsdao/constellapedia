@@ -1,5 +1,5 @@
 const Swal = require('sweetalert2');
-const axios = require("axios");
+const oceanConnector = require("../connectors/ocean-data-nft");
 
 module.exports.show = async (constellation = "", title, cb) => {
 
@@ -22,8 +22,8 @@ module.exports.show = async (constellation = "", title, cb) => {
                 placeHolder: "Search for node name...",
                 data: {
                     src: async (val) => {
-                        const response = await axios.get(process.env.API_BASEURL + '/nodes/search/' + val + '?constellation=' + constellation);
-                        return response.data.data;
+                        const response = (await oceanConnector.search());
+                        return response.nodes;
                     },
                     cache: false,
                     keys: ['label'],

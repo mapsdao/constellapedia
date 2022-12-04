@@ -30,7 +30,8 @@ module.exports.search = async (query) => {
             edges.push({
                 from: edge,
                 to: node.nftAddress,
-                label: ""
+                label: "depends on",
+                arrows: "to"
             });
         });
 
@@ -44,7 +45,7 @@ module.exports.search = async (query) => {
 
     });
 
-    console.log(nodesFromOcean);
+    console.log("Nodes from Ocean", nodesFromOcean);
     return { nodes, edges };
 };
 
@@ -58,10 +59,22 @@ module.exports.getNode = async (nftAddress) => {
 
 };
 
-module.exports.saveNode = (type, name, onProgress, done, onFail) => {
+module.exports.saveNode = (type, name, edges, onProgress, done, onFail) => {
 
     const Node = new NodeFactory();
 
-    return Node[type === 'goal' ? 'newGoal' : 'newProject'](name, onProgress, done, onFail)
+    const inboundAddrs = [];
+    const outboundAddrs = [];
+
+
+    edges.forEach(edge => {
+        if(!edge.from.id)
+            outboundAddrs.push(edge.to.id);
+        else
+            inboundAddrs.push(edge.from.id);
+    });
+
+
+    return Node[type === 'goal' ? 'newGoal' : 'newProject'](name, inboundAddrs, outboundAddrs, onProgress, done, onFail)
 
 };

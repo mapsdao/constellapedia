@@ -3,7 +3,6 @@ const selectNodeModal = require('../js/modals/select-node');
 const confirmModal = require('../js/modals/confirm-dialog');
 const abstractModal = require('../js/modals/abstract');
 const constellationTutModal = require('../js/modals/constellation-tut');
-const helpers = require('../js/helpers');
 const oceanConnector = require('./connectors/ocean-data-nft');
 
 import 'animate.css';
@@ -42,11 +41,29 @@ angular.module('constellation', []).controller('main', ['$scope', '$timeout', as
 
             const node = await oceanConnector.getNode(nodeId);
 
+            console.log("-->", $scope.currentMap.nodes);
+            const edges = [];
+            node.metadata.additionalInformation.inbound_addrs.split(" ").forEach(inboundAddr => {
+                edges.push({
+                    to: { id: nodeId, name: node.metadata.description },
+                    from: {id: inboundAddr, name: ($scope.currentMap.nodes.find(node=>node.id===inboundAddr)).label },
+                    type: 'DEPENDS_ON'
+                });
+            })
+
+            node.metadata.additionalInformation.outbound_addrs.split(" ").forEach(outboundAddr => {
+                edges.push({
+                    from: { id: nodeId, name: node.metadata.description },
+                    to: {id: outboundAddr, name: ($scope.currentMap.nodes.find(node=>node.id===outboundAddr)).label },
+                    type: 'DEPENDS_ON'
+                });
+            })
+
             $scope.formData.nodeId = nodeId;
             $scope.formData.nodeName = node.metadata.name;
             $scope.formData.nodeTags = node.metadata.tags;
             $scope.formData.nodeTitle = node.metadata.description;
-            $scope.formData.nodeEdges = [];
+            $scope.formData.nodeEdges = edges;
             $scope.formData.nodeType = node.metadata.additionalInformation.type;
         } else {
             $scope.formData.nodeId = null;
@@ -71,7 +88,7 @@ angular.module('constellation', []).controller('main', ['$scope', '$timeout', as
         console.log("$scope.formData", $scope.formData);
 
         if(!$scope.formData.nodeId)
-            oceanConnector.saveNode($scope.formData.nodeType, $scope.formData.nodeTitle,
+            oceanConnector.saveNode($scope.formData.nodeType, $scope.formData.nodeTitle, $scope.formData.nodeEdges,
                 (step, message) => {
                     console.log(step, message);
                     blockingLoader.setMessage(message);
@@ -85,12 +102,21 @@ angular.module('constellation', []).controller('main', ['$scope', '$timeout', as
                     console.log("FAIL", error);
                 }
             );
+
         else {
             try {
                 const node = await oceanConnector.getNode($scope.formData.nodeId);
                 node.metadata.description = $scope.formData.nodeTitle;
 
                 blockingLoader.setMessage("Updating node");
+
+
+                $scope.formData.nodeEdges.forEach(edge => {
+                    if(edge.from === $scope.formData.nodeId)
+                        node.addOutboundAddress(edge.to.id);
+                    else
+                        node.addInboundAddress(edge.from.id);
+                });
 
 
                 await node.pushToAquarius();
@@ -157,7 +183,7 @@ angular.module('constellation', []).controller('main', ['$scope', '$timeout', as
                         name: $scope.formData.nodeTitle,
                         id: $scope.formData.nodeId
                     } : {id: node.id, name: node.label},
-                    type: 'IMPLIES_THAT'
+                    type: 'DEPENDS_ON'
                 })
             });
 
@@ -178,11 +204,11 @@ angular.module('constellation', []).controller('main', ['$scope', '$timeout', as
         $scope.drawPanelIsOpen = false;
 
         try {
-            const response = await oceanConnector.search();
+            $scope.currentMap = await oceanConnector.search();
 
 
-            const nodes = new vis.DataSet(response.nodes);
-            const edges = new vis.DataSet(response.edges);
+            const nodes = new vis.DataSet($scope.currentMap.nodes);
+            const edges = new vis.DataSet($scope.currentMap.edges);
 
             const container = document.getElementById("constellation");
 
