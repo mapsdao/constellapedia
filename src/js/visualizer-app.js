@@ -41,9 +41,12 @@ angular.module('constellation', []).controller('main', ['$scope', '$timeout', as
 
             const node = await oceanConnector.getNode(nodeId);
 
-            console.log("-->", $scope.currentMap.nodes);
+            console.log("Opening node", node);
+
             const edges = [];
             node.metadata.additionalInformation.inbound_addrs.split(" ").forEach(inboundAddr => {
+                if(!inboundAddr)
+                    return;
                 edges.push({
                     to: { id: nodeId, name: node.metadata.description },
                     from: {id: inboundAddr, name: ($scope.currentMap.nodes.find(node=>node.id===inboundAddr)).label },
@@ -52,6 +55,8 @@ angular.module('constellation', []).controller('main', ['$scope', '$timeout', as
             })
 
             node.metadata.additionalInformation.outbound_addrs.split(" ").forEach(outboundAddr => {
+                if(!outboundAddr)
+                    return;
                 edges.push({
                     from: { id: nodeId, name: node.metadata.description },
                     to: {id: outboundAddr, name: ($scope.currentMap.nodes.find(node=>node.id===outboundAddr)).label },
@@ -85,7 +90,11 @@ angular.module('constellation', []).controller('main', ['$scope', '$timeout', as
     $scope.saveNode = async () => {
 
         blockingLoader.show();
-        console.log("$scope.formData", $scope.formData);
+
+        if(!$scope.formData.nodeTitle || $scope.formData.nodeTitle.length < 10) {
+            blockingLoader.hide();
+            return abstractModal.Alert("error", "Node title should be longer than 10 characters", "Oh oh!");
+        }
 
         if(!$scope.formData.nodeId)
             oceanConnector.saveNode($scope.formData.nodeType, $scope.formData.nodeTitle, $scope.formData.nodeEdges,
